@@ -42,11 +42,18 @@ app.get('/', (req, res) => {
   res.sendFile(process.cwd() + '/views/index.html');
 });
 
+app.get('/api/users', (req, res) => {
+  User.find({}, (err, users) => {
+    if (err) return console.error(err);
+    res.json(users);
+  });
+});
+
 app.post('/api/users', (req, res) => {
   const { username } = req.body;
 
   const user = new User({ username })
-    user.save({ username })
+  user.save({ username })
 
   res.json({
     username,
