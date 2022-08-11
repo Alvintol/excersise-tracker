@@ -51,7 +51,6 @@ app.get('/api/users', (req, res) => {
 
 app.post('/api/users', (req, res) => {
   const { username } = req.body;
-
   const user = new User({ username })
   user.save({ username })
 
@@ -61,6 +60,31 @@ app.post('/api/users', (req, res) => {
   })
 });
 
+app.post('/api/users/:id/exercises', (req, res) => {
+  const { id } = req.params;
+  const { description, duration, date } = req.body
+
+  const exercise = new Exercise({
+    description,
+    duration,
+    date: date ? date : new Date().toDateString(),
+    _id: id,
+  });
+
+  exercise.save(exercise);
+
+  User.find({ _id: id }, (err, user) => {
+    if (err) return console.error(err);
+    res.json({
+      username: user.username,
+      description,
+      duration,
+      date: date ? date : new Date().toDateString(),
+      _id: id,
+    })
+  })
+});
+
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log('Your app is listening on port ' + listener.address().port)
-})
+});
