@@ -21,10 +21,10 @@ client.connect(err => {
   client.close();
 });
 
-const userSchema({
+const userSchema = new mongoose.Schema({
   username: String
-})
-const exerciseSchema({
+});
+const exerciseSchema = new mongoose.Schema({
   username: String,
   description: String,
   duration: Number,
@@ -32,7 +32,7 @@ const exerciseSchema({
 })
 
 const User = mongoose.model('User', userSchema);
-const Exercise = mongoose.model('Excerise', ExerciseSchema);
+const Exercise = mongoose.model('Exercise', exerciseSchema);
 
 app.use('/public', express.static(`${process.cwd()}/public`));
 app.use(bodyparser.urlencoded({ extended: false }))
