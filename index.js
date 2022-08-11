@@ -42,7 +42,13 @@ app.get('/', (req, res) => {
   res.sendFile(process.cwd() + '/views/index.html');
 });
 
-
+app.post('/api/users', (req, res) => {
+  const {username} = req.body;
+  console.log('REQ:', req)
+  res.json({
+    username
+  })
+});
 
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log('Your app is listening on port ' + listener.address().port)
