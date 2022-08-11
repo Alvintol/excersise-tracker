@@ -43,10 +43,14 @@ app.get('/', (req, res) => {
 });
 
 app.post('/api/users', (req, res) => {
-  const {username} = req.body;
-  console.log('REQ:', req)
+  const { username } = req.body;
+
+  const user = new User({ username })
+    user.save({ username })
+
   res.json({
-    username
+    username,
+    _id: user['_id']
   })
 });
 
