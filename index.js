@@ -49,7 +49,29 @@ app.get('/api/users', (req, res) => {
   });
 });
 
-// app.get('/api/users/:_id')
+app.get('/api/users/:_id/logs', (req, res) => {
+
+  const {_id} = req.params;
+
+  console.log('IDDDDDDDDDDDDD:', _id)
+
+  count = Exercise.find({}, (err, total) => {
+    if (err) return console.error(err);
+    console.log('TOTAL:', total.length)
+    return total.length
+  })
+
+  res.json({
+    username: "fcc_test",
+    count,
+    _id,
+    log: [{
+      description: "test",
+      duration: 60,
+      date: "Mon Jan 01 1990",
+    }]
+  })
+})
 
 app.post('/api/users', (req, res) => {
   const { username } = req.body;
