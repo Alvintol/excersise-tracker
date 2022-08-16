@@ -55,22 +55,25 @@ app.get('/api/users/:_id/logs', (req, res) => {
 
   console.log('IDDDDDDDDDDDDD:', _id)
 
-  count = Exercise.find({}, (err, total) => {
+  Exercise.find({}, '_id description duration date', (err, logs) => {
     if (err) return console.error(err);
-    console.log('TOTAL:', total.length)
-    return total.length
+    console.log('USERNAME:', username);
+    console.log('RETURN:', {
+      username,
+      count: logs.length,
+      _id,
+      log: [logs]
+    });
+
+    res.json({
+      username: 'test username',
+      count: logs.length,
+      _id,
+      log: [logs]
+    })
   })
 
-  res.json({
-    username: "fcc_test",
-    count,
-    _id,
-    log: [{
-      description: "test",
-      duration: 60,
-      date: "Mon Jan 01 1990",
-    }]
-  })
+
 })
 
 app.post('/api/users', (req, res) => {
@@ -86,25 +89,22 @@ app.post('/api/users', (req, res) => {
 
 app.post('/api/users/:_id/exercises', (req, res) => {
   const { _id } = req.params;
-  const { description, duration, date } = req.body
+  const { description, duration, date } = req.body;
 
-  const exercise = new Exercise({
-    description,
-    duration,
-    date: date ? date : new Date().toDateString(),
-  });
 
-  exercise.save(exercise);
-
+  
   User.find({ _id }, (err, user) => {
     if (err) return console.error(err);
-    res.send({
+    
+    const exercise = new Exercise({
       username: user.username,
       description,
       duration,
       date: date ? date : new Date().toDateString(),
-      _id,
-    })
+    });
+    
+    exercise.save(exercise);
+    res.send(exercise)
   })
 });
 
