@@ -24,15 +24,28 @@ client.connect(err => {
 const userSchema = new mongoose.Schema({
   username: String
 });
+
 const exerciseSchema = new mongoose.Schema({
   username: String,
   description: String,
   duration: Number,
   date: String
+});
+
+const logSchema = new mongoose.Schema({
+  username: String,
+  count: Number,
+  _id: String,
+  log: [{
+    description: String,
+    duration: Number,
+    date: String,
+  }]
 })
 
 const User = mongoose.model('User', userSchema);
 const Exercise = mongoose.model('Exercise', exerciseSchema);
+const Log = mongoose.model('Log', logSchema);
 
 app.use('/public', express.static(`${process.cwd()}/public`));
 app.use(bodyparser.urlencoded({ extended: false }))
