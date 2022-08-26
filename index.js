@@ -1,6 +1,6 @@
 require('dotenv').config();
 const { MongoClient, ServerApiVersion } = require('mongodb');
-const bodyparser = require('body-parser')
+const bodyparser = require('body-parser');
 const mongoose = require('mongoose');
 const express = require('express');
 const cors = require('cors');
@@ -64,25 +64,24 @@ app.get('/api/users', (req, res) => {
 
 app.get('/api/users/:_id/logs', (req, res) => {
 
-  const {_id} = req.params;
+  const { _id } = req.params;
 
-  console.log('IDDDDDDDDDDDDD:', _id)
-
-  Exercise.find({}, '_id description duration date', (err, logs) => {
+  Log.find({}, '_id description duration date', (err, logs) => {
     if (err) return console.error(err);
-    console.log('USERNAME:', username);
-    console.log('RETURN:', {
+    const { username } = logs
+    // console.log('USERNAME:', username);
+    // console.log('RETURN:', {
+    //   username,
+    //   count: logs.length,
+    //   _id,
+    //   log: logs
+    // });
+
+    res.json({
       username,
       count: logs.length,
       _id,
-      log: [logs]
-    });
-
-    res.json({
-      username: 'test username',
-      count: logs.length,
-      _id,
-      log: [logs]
+      log: logs
     })
   })
 
@@ -94,9 +93,16 @@ app.post('/api/users', (req, res) => {
   const user = new User({ username })
   user.save({ username })
 
+  const { _id } = user
+
+  console.log('USER1:', {
+    username,
+    _id
+  })
+
   res.json({
     username,
-    _id: user['_id']
+    _id
   })
 });
 
@@ -105,19 +111,21 @@ app.post('/api/users/:_id/exercises', (req, res) => {
   const { description, duration, date } = req.body;
 
 
-  
-  User.find({ _id }, (err, user) => {
+  User.findOne({ _id }, (err, user) => {
     if (err) return console.error(err);
-    
+    console.log('USER2:', user)
+    console.log('USER2ID:', user["_id"])
+
     const exercise = new Exercise({
       username: user.username,
       description,
       duration,
       date: date ? date : new Date().toDateString(),
     });
-    
+
     exercise.save(exercise);
-    res.send(exercise)
+    console.log('EXERCISE:', user + exercise)
+    res.json(user + exercise)
   })
 });
 
