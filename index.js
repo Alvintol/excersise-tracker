@@ -94,39 +94,77 @@ app.post('/api/users', (req, res) => {
   user.save({ username })
 
   const { _id } = user
-
-  console.log('USER1:', {
-    username,
-    _id
-  })
-
   res.json({
     username,
     _id
   })
 });
 
-app.post('/api/users/:_id/exercises', (req, res) => {
-  const { _id } = req.params;
-  const { description, duration, date } = req.body;
+// app.post('/api/users/:_id/exercises', (req, res) => {
+//   const { _id } = req.params;
+//   const { description, duration, date } = req.body;
 
 
-  User.findOne({ _id }, (err, user) => {
-    if (err) return console.error(err);
-    console.log('USER2:', user)
-    console.log('USER2ID:', user["_id"])
+//   User.findOne({ _id }, (err, user) => {
+//     if (err) return console.error(err);
+//     console.log('USER2:', user)
+//     console.log('USER2ID:', user["_id"])
 
-    const exercise = new Exercise({
-      username: user.username,
-      description,
-      duration,
-      date: date ? date : new Date().toDateString(),
+//     const exercise = new Exercise({
+//       username: user.username,
+//       description,
+//       duration,
+//       date: date ? date : new Date().toDateString(),
+//     });
+
+//     exercise.save(exercise);
+//     console.log('EXERCISE:', user + exercise)
+//     res.json(user + exercise)
+//   })
+// });
+app.post("/api/users/:_id/exercises", (req, res) => {
+  const userId = req.params._id;
+
+  const { duration, description } = req.body;
+  let date = req.body.date ? new Date(req.body.date) : new Date();
+
+  if (userId && duration && description) {
+    User.findById(userId, (err, data) => {
+      if (!data) {
+        res.send("Invalid userID");
+      } else {
+        const username = data.username;
+        const newExercise = new Exercise({
+          userId,
+          username,
+          "date": date.toDateString(),
+          duration,
+          description
+        });
+
+        newExercise.save((err, data) => {
+          if (err) console.error(err);
+          console.log("EXERCISE ADDED: ", {
+            "_id": userId, 
+            username,
+            "date": date.toDateString(),
+            duration,
+            description
+          });
+
+          res.json({
+            "_id": userId,
+            username,
+            "date": date.toDateString(),
+            "duration": parseInt(duration),
+            description
+          });
+        });
+      }
     });
-
-    exercise.save(exercise);
-    console.log('EXERCISE:', user + exercise)
-    res.json(user + exercise)
-  })
+  } else {
+    res.send("Please fill in all required fields.");
+  }
 });
 
 const listener = app.listen(process.env.PORT || 3000, () => {
