@@ -56,10 +56,12 @@ app.get('/', (req, res) => {
 });
 
 app.get('/api/users', (req, res) => {
-  User.find({}, (err, users) => {
-    if (err) return console.error(err);
-    res.json(users);
-  });
+  User.find({})
+    .select(["_id", "username"])
+    .exec((err, user) => {
+      if (err) return console.error(err);
+      res.json(user);
+    });
 });
 
 app.get('/api/users/:_id/logs', (req, res) => {
@@ -84,8 +86,6 @@ app.get('/api/users/:_id/logs', (req, res) => {
       log: logs
     })
   })
-
-
 })
 
 app.post('/api/users', (req, res) => {
