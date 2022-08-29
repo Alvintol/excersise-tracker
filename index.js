@@ -21,9 +21,6 @@ client.connect(err => {
   client.close();
 });
 
-const userSchema = new mongoose.Schema({
-  username: String
-});
 
 const exerciseSchema = new mongoose.Schema({
   username: String,
@@ -32,20 +29,13 @@ const exerciseSchema = new mongoose.Schema({
   date: String
 });
 
-const logSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
   username: String,
-  count: Number,
-  _id: String,
-  log: [{
-    description: String,
-    duration: Number,
-    date: String,
-  }]
-})
+  exercises: [exerciseSchema]
+});
 
 const User = mongoose.model('User', userSchema);
 const Exercise = mongoose.model('Exercise', exerciseSchema);
-const Log = mongoose.model('Log', logSchema);
 
 app.use('/public', express.static(`${process.cwd()}/public`));
 app.use(bodyparser.urlencoded({ extended: false }))
@@ -64,29 +54,6 @@ app.get('/api/users', (req, res) => {
     });
 });
 
-app.get('/api/users/:_id/logs', (req, res) => {
-
-  const { _id } = req.params;
-
-  Log.find({}, '_id description duration date', (err, logs) => {
-    if (err) return console.error(err);
-    const { username } = logs
-    // console.log('USERNAME:', username);
-    // console.log('RETURN:', {
-    //   username,
-    //   count: logs.length,
-    //   _id,
-    //   log: logs
-    // });
-
-    res.json({
-      username,
-      count: logs.length,
-      _id,
-      log: logs
-    })
-  })
-})
 
 app.post('/api/users', (req, res) => {
   const { username } = req.body;
@@ -100,28 +67,6 @@ app.post('/api/users', (req, res) => {
   })
 });
 
-// app.post('/api/users/:_id/exercises', (req, res) => {
-//   const { _id } = req.params;
-//   const { description, duration, date } = req.body;
-
-
-//   User.findOne({ _id }, (err, user) => {
-//     if (err) return console.error(err);
-//     console.log('USER2:', user)
-//     console.log('USER2ID:', user["_id"])
-
-//     const exercise = new Exercise({
-//       username: user.username,
-//       description,
-//       duration,
-//       date: date ? date : new Date().toDateString(),
-//     });
-
-//     exercise.save(exercise);
-//     console.log('EXERCISE:', user + exercise)
-//     res.json(user + exercise)
-//   })
-// });
 app.post("/api/users/:_id/exercises", (req, res) => {
   const userId = req.params._id;
 
@@ -145,7 +90,7 @@ app.post("/api/users/:_id/exercises", (req, res) => {
         newExercise.save((err, data) => {
           if (err) console.error(err);
           console.log("EXERCISE ADDED: ", {
-            "_id": userId, 
+            "_id": userId,
             username,
             "date": date.toDateString(),
             duration,
@@ -166,6 +111,68 @@ app.post("/api/users/:_id/exercises", (req, res) => {
     res.send("Please fill in all required fields.");
   }
 });
+
+app.get('/api/users/:_id/logs', (req, res) => {
+  const userId = req.params._id, { limit } = req.query;
+  let from = req.query.from ?
+    new Date(req.query.from).getTime() :
+    new Date("1111-11-11").getTime();
+  let to = req.query.to ?
+    new Date(req.query.to).getTime() :
+    new Date().getTime();
+
+  User.findById(userId, (err, data) => {
+    if (err) console.error(err);
+
+    if (!data) {
+      res.send("Unknown userId");
+    } else {
+      const username = data.username;
+
+      Exercise.find({ userId }).select(["description", "date", "duration"]).limit(+limit).sort({ date: -1 }).exec((err, data) => {
+        if (err) console.error(err);
+        let count = 0;
+        let customData = data
+          .filter(element => {
+            let newEle = new Date(element.date).getTime();
+            if (newEle >= from && newEle <= to) count++;
+            return newEle >= from && newEle <= to;
+          })
+          .map(element => {
+            let newDate = new Date(element.date).toDateString();
+            return { 
+              description: element.description, 
+              duration: element.duration,
+              date: newDate };
+          });
+
+          console.log('CUSTOMDATA:', customData)
+        if (!data) {
+          res.json({
+            "_id": userId,
+            "username": username,
+            "count": 0,
+            "log": []
+          });
+        } else {
+          console.log('OUTPUT:', {
+            "username": username,
+            "count": count,
+            "_id": userId,
+            "log": customData
+          })
+          res.json({
+            "username": username,
+            "count": count,
+            "_id": userId,
+            "log": customData
+          });
+        }
+      });
+    }
+  })
+});
+
 
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log('Your app is listening on port ' + listener.address().port)
