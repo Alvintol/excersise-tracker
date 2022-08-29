@@ -21,6 +21,9 @@ client.connect(err => {
   client.close();
 });
 
+const userSchema = new mongoose.Schema({
+  username: String,
+});
 
 const exerciseSchema = new mongoose.Schema({
   username: String,
@@ -29,10 +32,6 @@ const exerciseSchema = new mongoose.Schema({
   date: String
 });
 
-const userSchema = new mongoose.Schema({
-  username: String,
-  exercises: [exerciseSchema]
-});
 
 const User = mongoose.model('User', userSchema);
 const Exercise = mongoose.model('Exercise', exerciseSchema);
@@ -71,7 +70,9 @@ app.post("/api/users/:_id/exercises", (req, res) => {
   const userId = req.params._id;
 
   const { duration, description } = req.body;
-  let date = req.body.date ? new Date(req.body.date) : new Date();
+  let date = req.body.date ?
+    new Date(req.body.date) :
+    new Date();
 
   if (userId && duration && description) {
     User.findById(userId, (err, data) => {
@@ -112,7 +113,7 @@ app.post("/api/users/:_id/exercises", (req, res) => {
   }
 });
 
-app.get('/api/users/:_id/logs', (req, res) => {
+app.get("/api/users/:_id/logs", (req, res) => {
   const userId = req.params._id, { limit } = req.query;
   let from = req.query.from ?
     new Date(req.query.from).getTime() :
@@ -121,54 +122,64 @@ app.get('/api/users/:_id/logs', (req, res) => {
     new Date(req.query.to).getTime() :
     new Date().getTime();
 
-  User.findById(userId, (err, data) => {
+  User.findById(userId, (err, user) => {
     if (err) console.error(err);
 
-    if (!data) {
-      res.send("Unknown userId");
+    if (!user) {
+      res.send("Invalid ID");
     } else {
-      const username = data.username;
+      const username = user.username;
 
-      Exercise.find({ userId }).select(["description", "date", "duration"]).limit(+limit).sort({ date: -1 }).exec((err, data) => {
-        if (err) console.error(err);
-        let count = 0;
-        let customData = data
-          .filter(element => {
-            let newEle = new Date(element.date).getTime();
-            if (newEle >= from && newEle <= to) count++;
-            return newEle >= from && newEle <= to;
-          })
-          .map(element => {
-            let newDate = new Date(element.date).toDateString();
-            return { 
-              description: element.description, 
-              duration: element.duration,
-              date: newDate };
-          });
+      Exercise.find({ username })
+        .select(["description", "date", "duration"])
+        .limit(+limit)
+        .sort({ date: -1 })
+        .exec((err, data) => {
+          if (err) console.error(err);
+          let count = 0;
+          let log = data
+            .filter(element => {
+              let newEle = new Date(element.date).getTime();
+              if (newEle >= from && newEle <= to) count++;
+              return newEle >= from && newEle <= to;
+            })
+            .map(element => {
+              let newDate = new Date(element.date).toDateString();
+              return {
+                description: element.description,
+                duration: element.duration,
+                date: newDate
+              };
+            });
+          if (!data) {
+            console.log('IF OUTCOME:', {
+              username,
+              "count": 0,
+              "_id": userId,
+              "log": []
+            });
 
-          console.log('CUSTOMDATA:', customData)
-        if (!data) {
-          res.json({
-            "_id": userId,
-            "username": username,
-            "count": 0,
-            "log": []
-          });
-        } else {
-          console.log('OUTPUT:', {
-            "username": username,
-            "count": count,
-            "_id": userId,
-            "log": customData
-          })
-          res.json({
-            "username": username,
-            "count": count,
-            "_id": userId,
-            "log": customData
-          });
-        }
-      });
+            res.json({
+              username,
+              "count": 0,
+              "_id": userId,
+              "log": []
+            });
+          } else {
+            console.log('ELSE OUTCOME:', {
+              username,
+              count,
+              "_id": userId,
+              log
+            })
+            res.json({
+              username,
+              count,
+              "_id": userId,
+              log
+            });
+          }
+        });
     }
   })
 });
