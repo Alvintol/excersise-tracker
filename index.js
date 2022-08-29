@@ -152,13 +152,6 @@ app.get("/api/users/:_id/logs", (req, res) => {
               };
             });
           if (!data) {
-            console.log('IF OUTCOME:', {
-              username,
-              "count": 0,
-              "_id": userId,
-              "log": []
-            });
-
             res.json({
               username,
               "count": 0,
@@ -166,12 +159,6 @@ app.get("/api/users/:_id/logs", (req, res) => {
               "log": []
             });
           } else {
-            console.log('ELSE OUTCOME:', {
-              username,
-              count,
-              "_id": userId,
-              log
-            })
             res.json({
               username,
               count,
